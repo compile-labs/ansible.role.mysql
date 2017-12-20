@@ -1,0 +1,17 @@
+---
+mysql_version: "5.7"
+mysql_python_version: "1.2.5"
+
+# defaults file for mysql_server
+mysql__bind_address: 0.0.0.0
+mysql__port: 3306
+hostname: localhost
+
+# --------------------------------------------------------------------------------------------------
+# Users and Databases
+# --------------------------------------------------------------------------------------------------
+mysql__localhost: true
+mysql__root_password: mysql_server_password
+mysql__database: 'mysql__sandbox'
+mysql__user: 'mysql__sandbox__user'
+mysql__password: 'mysql__sandbox__password'

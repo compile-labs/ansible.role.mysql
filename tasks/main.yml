@@ -1,0 +1,40 @@
+---
+  # tasks file for mysql_server
+  - name: Setting MySQL root password before installing
+    debconf: name='mysql-server' question='mysql-server/root_password' value='{{mysql__root_password | quote}}' vtype='password'
+
+  - name: Confirm MySQL root password before installing
+    debconf: name='mysql-server' question='mysql-server/root_password_again' value='{{mysql__root_password | quote}}' vtype='password'
+
+  - name: Install MySQL Packages
+    become: yes
+    apt: pkg="{{ item }}" state=latest  force=yes
+    with_items:
+      - mysql-server
+      - mysql-client
+      - python-mysqldb
+      - libmysqlclient-dev
+    when: ansible_os_family == 'Debian'
+
+  - name: Create Mysql configuration file
+    template: src=my.cnf.j2 dest=/etc/mysql/conf.d/my.cnf mode=0644
+    become: yes
+    notify:
+      - restart__mysql
+
+  - name: Update root password for all root accounts
+    become: yes
+    mysql_user: name=root host="{{ item }}" priv="*.*:ALL,GRANT" check_implicit_admin=yes password="{{ mysql__root_password }}" login_user=root login_password="{{ mysql__root_password }}"
+    with_items:
+      - "{{ hostname }}"
+      - 127.0.0.1
+      - 192.168.33.1
+      - localhost
+
+  - name: Create databases
+    become: yes
+    mysql_db: name="{{ mysql__database }}" state=present login_user=root login_password="{{ mysql__root_password }}"
+
+  - name: Create users
+    become: yes
+    mysql_user: name="{{ mysql__user }}" password="{{ mysql__password }}" priv="{{ mysql__database }}%.*:ALL" state=present login_user=root login_password="{{ mysql__root_password }}"
